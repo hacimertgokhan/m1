@@ -1,6 +1,6 @@
-package github.hacimertgokhan.m1.jdbc;
+package io.github.hacimertgokhan.m1.jdbc;
 
-import github.hacimertgokhan.m1.core.Database;
+import io.github.hacimertgokhan.m1.core.Database;
 
 import java.sql.*;
 import java.util.Map;

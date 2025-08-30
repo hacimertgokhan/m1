@@ -1,4 +1,4 @@
-package github.hacimertgokhan.m1.jdbc;
+package io.github.hacimertgokhan.m1.jdbc;
 
 import java.sql.*;
 import java.util.Properties;

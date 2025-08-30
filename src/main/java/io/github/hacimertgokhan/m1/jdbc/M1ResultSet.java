@@ -1,6 +1,6 @@
-package github.hacimertgokhan.m1.jdbc;
+package io.github.hacimertgokhan.m1.jdbc;
 
-import github.hacimertgokhan.m1.core.Table;
+import io.github.hacimertgokhan.m1.core.Table;
 
 import java.io.InputStream;
 import java.io.Reader;

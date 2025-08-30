@@ -1,4 +1,4 @@
-package github.hacimertgokhan.m1.core;
+package io.github.hacimertgokhan.m1.core;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

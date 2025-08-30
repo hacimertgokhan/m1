@@ -1,8 +1,8 @@
-package github.hacimertgokhan;
+package io.github.hacimertgokhan;
 
-import github.hacimertgokhan.m1.console.Console;
-import github.hacimertgokhan.m1.core.Database;
-import github.hacimertgokhan.m1.jdbc.M1Driver;
+import io.github.hacimertgokhan.m1.console.Console;
+import io.github.hacimertgokhan.m1.core.Database;
+import io.github.hacimertgokhan.m1.jdbc.M1Driver;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;

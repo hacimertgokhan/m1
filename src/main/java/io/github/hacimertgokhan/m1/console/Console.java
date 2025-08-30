@@ -1,4 +1,4 @@
-package github.hacimertgokhan.m1.console;
+package io.github.hacimertgokhan.m1.console;
 
 import java.sql.*;
 import java.util.ArrayList;
