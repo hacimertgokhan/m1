@@ -6,7 +6,7 @@
 
     <groupId>io.github.hacimertgokhan</groupId>
     <artifactId>m1</artifactId>
-    <version>0.1.0-ALPHA</version>
+    <version>0.1.0-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -27,91 +27,40 @@
 
     <developers>
         <developer>
-            <name>Haci Mert Gokhan</name>
-            <email>email@adresiniz.com</email>
+            <id>hacimertgokhan</id>
+            <name>Hacı Mert Gökhan</name>
+            <email>hacimertgokhan@gmail.com</email>
         </developer>
     </developers>
 
     <scm>
+        <url>https://github.com/hacimertgokhan/m1</url>
         <connection>scm:git:git://github.com/hacimertgokhan/m1.git</connection>
-        <developerConnection>scm:git:ssh://github.com:hacimertgokhan/m1.git</developerConnection>
-        <url>http://github.com/hacimertgokhan/m1/tree/master</url>
+        <developerConnection>scm:git:ssh://github.com/hacimertgokhan/m1.git</developerConnection>
     </scm>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/hacimertgokhan/m1</url>
         </repository>
     </distributionManagement>
 
     <build>
         <plugins>
-            <!-- Deploy plugin'ini buraya taşıyarak versiyonunu sabitleyebiliriz -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>2.8.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
-
-    <!-- MAVEN CENTRAL YAYINI İÇİN GEREKLİ PROFİL -->
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <!-- Kaynak Kodunu Paketlemek İçin -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.1</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- Javadoc Oluşturmak İçin -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.4.0</version>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- GPG ile Dosyaları İmzalamak İçin -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>
