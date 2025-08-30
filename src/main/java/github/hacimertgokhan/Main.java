@@ -1,6 +1,7 @@
 package github.hacimertgokhan;
 
 import github.hacimertgokhan.m1.console.Console;
+import github.hacimertgokhan.m1.core.Database;
 import github.hacimertgokhan.m1.jdbc.M1Driver;
 
 import java.sql.DriverManager;
@@ -8,20 +9,29 @@ import java.sql.SQLException;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("M1 Veritabanı Konsoluna Hoş Geldiniz!");
-        System.out.println("JDBC Sürücüsü Yükleniyor...");
+        System.out.println("Loading JDBC Drivers...");
 
         try {
-            // Bu sayede DriverManager.getConnection("jdbc:m1:...") çağrısı bizim driver'ımızı bulacak.
             DriverManager.registerDriver(new M1Driver());
-            System.out.println("JDBC Sürücüsü başarıyla yüklendi.");
+            System.out.println("JDBC Drivers successfully loaded.");
 
-            // Konsolu başlat
+            String dbUrl = "jdbc:m1:file:./m1.db";
+            String dbFilePath = dbUrl.substring("jdbc:m1:file:".length());
+            final Database database = Database.getInstance(dbFilePath);
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    database.shutdown();
+                } catch (SQLException e) {
+                    System.err.println("An error occured: " + e.getMessage());
+                }
+            }));
+
             Console console = new Console();
             console.start();
 
         } catch (SQLException e) {
-            System.err.println("JDBC sürücüsü yüklenirken bir hata oluştu: " + e.getMessage());
+            System.err.println("Database cannot started: " + e.getMessage());
             e.printStackTrace();
         }
     }
