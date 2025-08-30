@@ -224,4 +224,7 @@ public class Database {
                 .map(String::trim)
                 .toArray(String[]::new);
     }
+    public java.util.Set<String> getTableNames() {
+        return new java.util.HashSet<>(this.tables.keySet());
+    }
 }

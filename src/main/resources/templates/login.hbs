@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Giriş - M1 DB Console</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>M1 DB Console</h1>
+        <p>Veritabanına erişmek için giriş yapın.</p>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="username">Kullanıcı Adı</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Şifre</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <p id="error-message" class="error-text"></p>
+            <button type="submit" class="btn">Giriş Yap</button>
+        </form>
+    </div>
+</div>
+<script src="/script.js"></script>
+</body>
+</html>
