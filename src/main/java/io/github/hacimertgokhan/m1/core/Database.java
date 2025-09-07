@@ -1,4 +1,4 @@
-package io.github.hacimertgokhan.m1.core; // Paket adını kendi projeninkine göre kontrol et
+package io.github.hacimertgokhan.m1.core; 
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import static io.github.hacimertgokhan.m1.tools.M1Logger.*;
 
 public class Database {
     private static final Map<String, Database> instances = new ConcurrentHashMap<>();
@@ -25,28 +26,28 @@ public class Database {
     private final AtomicInteger changesSinceLastCheckpoint = new AtomicInteger(0);
     private static final int CHECKPOINT_THRESHOLD = 100;
 
-    // --- DOĞRU SIRALAMAYA SAHİP CONSTRUCTOR ---
+    
     private Database(String filePath) throws SQLException {
         this.storageManager = new StorageManager(filePath);
         try {
             this.wal = new WriteAheadLog(filePath);
         } catch (IOException e) {
-            throw new SQLException("Write-Ahead Log başlatılamadı.", e);
+            throw new SQLException("Write-Ahead Log cannot started.", e);
         }
 
         Map<String, Table> loadedTables;
         try {
             loadedTables = this.storageManager.load();
-            System.out.println("Veritabanı ana dosyası '" + filePath + "' başarıyla yüklendi.");
+            info("'" + filePath + "' loaded successfully.");
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Veritabanı ana dosyası yüklenirken hata: " + e.getMessage() + ". Boş bir veritabanı ile devam ediliyor.");
+            error("An error occured while loading database file: " + e.getMessage() + ". Starting with empty database file.");
             loadedTables = new ConcurrentHashMap<>();
         }
 
-        // 1. ADIM: ÖNCE `this.tables` değişkenine değerini ata (TEMELİ AT)
+        
         this.tables = loadedTables;
 
-        // 2. ADIM: ARTIK `this.tables` null olmadığı için, onu kullanan metodu güvenle çağır (EŞYALARI TAŞI)
+        
         recoverFromLog();
     }
 
@@ -61,11 +62,11 @@ public class Database {
         try {
             List<String> commandsToRecover = wal.recover();
             if (!commandsToRecover.isEmpty()) {
-                System.out.println(commandsToRecover.size() + " adet işlem log dosyasından kurtarılıyor...");
+                info(commandsToRecover.size() + " process loading from log file...");
                 for (String sql : commandsToRecover) {
                     executeUpdateInternal(sql, false);
                 }
-                System.out.println("Kurtarma işlemi tamamlandı.");
+                info("Kurtarma işlemi tamamlandı.");
                 checkpoint();
             }
         } catch (IOException e) {
@@ -74,14 +75,14 @@ public class Database {
     }
 
     private synchronized void checkpoint() throws SQLException {
-        System.out.println("Checkpoint başlatılıyor...");
+        info("Starting checkpoint...");
         try {
             storageManager.save(this.tables);
             wal.clear();
             changesSinceLastCheckpoint.set(0);
-            System.out.println("Checkpoint tamamlandı.");
+            info("Checkpoint done.");
         } catch (IOException e) {
-            throw new SQLException("Checkpoint işlemi başarısız oldu.", e);
+            throw new SQLException("Checkpoint action failed.", e);
         }
     }
 
@@ -92,7 +93,7 @@ public class Database {
             String tableName = matcher.group(2).toUpperCase();
             String whereClause = matcher.group(3);
             Table table = tables.get(tableName);
-            if (table == null) throw new SQLException("Tablo bulunamadı: " + tableName);
+            if (table == null) throw new SQLException("No table found with this argument: " + tableName);
             if (!columns.trim().equals("*")) throw new SQLException("Şimdilik sadece 'SELECT *' desteklenmektedir.");
             Table resultTable = new Table("RESULT");
             table.getColumnNames().forEach(resultTable::addColumn);
@@ -103,7 +104,7 @@ public class Database {
             }
             return resultTable;
         }
-        throw new SQLException("Desteklenmeyen veya geçersiz SELECT sorgusu: " + sql);
+        throw new SQLException("Unknow or unsupported select query: " + sql);
     }
 
     public int executeUpdate(String sql) throws SQLException {
@@ -115,7 +116,7 @@ public class Database {
             try {
                 wal.log(sql);
             } catch (IOException e) {
-                throw new SQLException("İşlem log dosyasına yazılamadı. Veritabanı değişikliği iptal edildi.", e);
+                throw new SQLException("Transaction cancelled, error: ", e);
             }
         }
         sql = sql.trim();
@@ -124,7 +125,7 @@ public class Database {
         if ((matcher = PATTERN_CREATE_TABLE.matcher(sql)).matches()) {
             String tableName = matcher.group(1).toUpperCase();
             String[] columns = matcher.group(2).split(",");
-            if (tables.containsKey(tableName)) throw new SQLException("Tablo zaten var: " + tableName);
+            if (tables.containsKey(tableName)) throw new SQLException("Table already exists: " + tableName);
             Table newTable = new Table(tableName);
             for (String col : columns) {
                 newTable.addColumn(col.trim());
@@ -136,7 +137,7 @@ public class Database {
             String tableName = matcher.group(1).toUpperCase();
             String[] values = parseValues(matcher.group(2));
             Table table = tables.get(tableName);
-            if (table == null) throw new SQLException("Tablo bulunamadı: " + tableName);
+            if (table == null) throw new SQLException("Table not found: " + tableName);
             List<Object> rowData = Arrays.stream(values).map(this::autoParseType).collect(Collectors.toList());
             table.addRow(rowData);
             affectedRows = 1;
@@ -146,13 +147,13 @@ public class Database {
             String setClause = matcher.group(2);
             String whereClause = matcher.group(3);
             Table table = tables.get(tableName);
-            if (table == null) throw new SQLException("Tablo bulunamadı: " + tableName);
+            if (table == null) throw new SQLException("Table not found: " + tableName);
             String[] setParts = setClause.split("=");
-            if(setParts.length != 2) throw new SQLException("Geçersiz SET ifadesi: " + setClause);
+            if(setParts.length != 2) throw new SQLException("Unknow set argument: " + setClause);
             String colToUpdate = setParts[0].trim().toUpperCase();
             Object newValue = autoParseType(setParts[1].trim());
             int colIndex = table.getColumnNames().indexOf(colToUpdate);
-            if (colIndex == -1) throw new SQLException("Kolon bulunamadı: " + colToUpdate);
+            if (colIndex == -1) throw new SQLException("Column not found: " + colToUpdate);
             int updatedCount = 0;
             for (List<Object> row : table.getInternalRows()) {
                 if (whereClause == null || rowMatches(table, row, whereClause)) {
@@ -166,13 +167,13 @@ public class Database {
             String tableName = matcher.group(1).toUpperCase();
             String whereClause = matcher.group(2);
             Table table = tables.get(tableName);
-            if (table == null) throw new SQLException("Tablo bulunamadı: " + tableName);
+            if (table == null) throw new SQLException("Table not found: " + tableName);
             int initialSize = table.getInternalRows().size();
             table.getInternalRows().removeIf(row -> whereClause == null || rowMatches(table, row, whereClause));
             affectedRows = initialSize - table.getInternalRows().size();
         }
         else {
-            throw new SQLException("Desteklenmeyen veya geçersiz DML/DDL komutu: " + sql);
+            throw new SQLException("Unsupported DML/DDL command: " + sql);
         }
         if (shouldLogAndCheckpoint && affectedRows > 0) {
             if (changesSinceLastCheckpoint.incrementAndGet() >= CHECKPOINT_THRESHOLD) {
@@ -183,12 +184,12 @@ public class Database {
     }
 
     public void shutdown() throws SQLException {
-        System.out.println("Veritabanı kapatılıyor, son checkpoint yapılıyor...");
+        info("M1 shutting down...");
         checkpoint();
         try {
             wal.close();
         } catch (IOException e) {
-            System.err.println("WAL kapatılırken hata oluştu: " + e.getMessage());
+            error("An error occured while shutting down WAL, Error: " + e.getMessage());
         }
     }
 

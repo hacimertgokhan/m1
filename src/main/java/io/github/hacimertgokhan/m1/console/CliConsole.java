@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import static io.github.hacimertgokhan.m1.tools.M1Logger.*;
 
 public class CliConsole {
 
@@ -19,12 +20,11 @@ public class CliConsole {
     }
 
     public void start() {
-        // try-with-resources ile kaynakların otomatik kapanmasını sağlıyoruz
+        
         try (Connection connection = DriverManager.getConnection(dbUrl);
              Scanner scanner = new Scanner(System.in)) {
 
-            System.out.println("Komut Satırı Konsoluna Hoş Geldiniz.");
-            System.out.println("Bağlantı başarılı. 'exit' yazarak çıkabilirsiniz.");
+            info("Connection successfull. Write 'exit' to close connection.");
 
             while (true) {
                 System.out.print("m1-sql> ");
@@ -46,18 +46,18 @@ public class CliConsole {
                         printResultSet(rs);
                     } else {
                         int affectedRows = statement.executeUpdate(sql);
-                        System.out.println("İşlem başarılı. Etkilenen satır sayısı: " + affectedRows);
+                        info("İşlem başarılı. Etkilenen satır sayısı: " + affectedRows);
                     }
                 } catch (SQLException e) {
-                    System.err.println("Hata: " + e.getMessage());
+                    error("Hata: " + e.getMessage());
                 }
             }
 
         } catch (SQLException e) {
-            System.err.println("Veritabanına bağlanılamadı: " + e.getMessage());
+            error("Veritabanına bağlanılamadı: " + e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("M1 Komut Satırı Konsolu kapatıldı.");
+        info("M1 Komut Satırı Konsolu kapatıldı.");
     }
 
     private void printResultSet(ResultSet rs) throws SQLException {
@@ -67,8 +67,8 @@ public class CliConsole {
         for (int i = 1; i <= columnCount; i++) {
             headers.add(metaData.getColumnName(i));
         }
-        System.out.println(String.join(" | ", headers));
-        System.out.println("-".repeat(String.join(" | ", headers).length()));
+        info(String.join(" | ", headers));
+        info("-".repeat(String.join(" | ", headers).length()));
 
         int rowCount = 0;
         while (rs.next()) {
@@ -77,9 +77,9 @@ public class CliConsole {
                 Object value = rs.getObject(i);
                 row.add(value == null ? "NULL" : value.toString());
             }
-            System.out.println(String.join(" | ", row));
+            info(String.join(" | ", row));
             rowCount++;
         }
-        System.out.println("\n(" + rowCount + " satır bulundu)");
+        info("\n(" + rowCount + " satır bulundu)");
     }
 }

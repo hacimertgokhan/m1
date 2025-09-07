@@ -20,20 +20,12 @@ public class WriteAheadLog {
         this.writer = Files.newBufferedWriter(logFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
-    /**
-     * Gelen SQL komutunu log dosyasına yazar.
-     * @param sql Loglanacak SQL komutu.
-     */
     public synchronized void log(String sql) throws IOException {
         writer.write(sql);
         writer.newLine();
         writer.flush(); 
     }
 
-    /**
-     * Veritabanı başlangıcında log dosyasını okuyarak kurtarma yapar.
-     * @return Kurtarılacak SQL komutlarının listesi.
-     */
     public List<String> recover() throws IOException {
         if (!Files.exists(logFilePath)) {
             return List.of(); 
@@ -43,9 +35,6 @@ public class WriteAheadLog {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Checkpoint sonrası log dosyasını temizler.
-     */
     public synchronized void clear() throws IOException {
         
         writer.close();

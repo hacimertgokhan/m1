@@ -13,20 +13,12 @@ public class StorageManager {
         this.dbFile = new File(filePath);
     }
 
-    /**
-     * Veritabanı durumunu (tabloları) dosyaya yazar.
-     * @param tables Kaydedilecek tablo haritası.
-     */
     public synchronized void save(Map<String, Table> tables) throws IOException {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dbFile))) {
             oos.writeObject(new ConcurrentHashMap<>(tables)); 
         }
     }
 
-    /**
-     * Veritabanı durumunu dosyadan okur. Dosya yoksa boş bir harita döndürür.
-     * @return Dosyadan okunan tablo haritası.
-     */
     @SuppressWarnings("unchecked")
     public synchronized Map<String, Table> load() throws IOException, ClassNotFoundException {
         if (!dbFile.exists()) {

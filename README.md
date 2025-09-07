@@ -101,28 +101,28 @@ import java.sql.Statement;
 public class M1Example {
 
     public static void main(String[] args) {
-        // The path to the database file
+        
         String url = "jdbc:m1:file:./my_app_data.db";
 
         try {
-            // There is no need to manually load the driver;
-            // with the JDBC 4.0 standard, it is discovered automatically.
             
-            // Establish the connection
+            
+            
+            
             Connection connection = DriverManager.getConnection(url);
             Statement statement = connection.createStatement();
 
-            // Create a table and insert data
+            
             statement.executeUpdate("CREATE TABLE USERS (ID, USERNAME)");
             statement.executeUpdate("INSERT INTO USERS VALUES (1, 'mert')");
 
-            // Query the data
+            
             ResultSet rs = statement.executeQuery("SELECT * FROM USERS");
             while (rs.next()) {
                 System.out.println("ID: " + rs.getInt("ID") + ", Username: " + rs.getString("USERNAME"));
             }
 
-            // Close the resources
+            
             rs.close();
             statement.close();
             connection.close();

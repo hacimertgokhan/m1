@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Sayfa yolu'na göre ilgili fonksiyonu çalıştır
+
     if (document.querySelector('#login-form')) {
         initLoginPage();
     }
@@ -50,7 +50,7 @@ function initConsolePage() {
     const messageContent = document.getElementById('message-content');
     const tabButtons = document.querySelectorAll('.tab-btn');
 
-    // Tablo listesini yükle
+
     const loadTables = async () => {
         const response = await fetch('/api/tables');
         const tables = await response.json();
@@ -67,7 +67,7 @@ function initConsolePage() {
         });
     };
 
-    // Tab değiştirme
+
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -78,7 +78,7 @@ function initConsolePage() {
         });
     });
 
-    // SQL formunu gönderme
+
     sqlForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const sql = editor.getValue();
@@ -101,7 +101,7 @@ function initConsolePage() {
             } else {
                 displayMessage(result.message, 'success');
                 document.querySelector('[data-tab="message"]').click();
-                loadTables(); // Tablo yapısı değişmiş olabilir, listeyi yenile
+                loadTables();
             }
         } else {
             displayMessage(result.message, 'error');

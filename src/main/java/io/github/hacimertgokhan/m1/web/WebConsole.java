@@ -20,7 +20,7 @@ public class WebConsole {
         port(5807);
         staticFiles.location("/public");
 
-        // --- GİRİŞ KONTROLÜ ---
+        
         before((req, res) -> {
             String path = req.pathInfo();
             if (!path.equals("/login") && !path.equals("/api/login")) {
@@ -31,11 +31,11 @@ public class WebConsole {
             }
         });
 
-        // --- SAYFA ROTALARI ---
+        
         get("/login", (req, res) -> new HandlebarsTemplateEngine().render(new ModelAndView(null, "login.hbs")));
         get("/", (req, res) -> new HandlebarsTemplateEngine().render(new ModelAndView(null, "index.hbs")));
 
-        // --- API ROTALARI (JSON DÖNDÜRENLER) ---
+        
         post("/api/login", (req, res) -> {
             Map<String, String> payload = gson.fromJson(req.body(), Map.class);
             if (payload.get("username").equals(config.getUsername()) && payload.get("password").equals(config.getPassword())) {
@@ -43,7 +43,7 @@ public class WebConsole {
                 return gson.toJson(Map.of("status", "success"));
             }
             res.status(401);
-            return gson.toJson(Map.of("status", "error", "message", "Kullanıcı adı veya şifre yanlış."));
+            return gson.toJson(Map.of("status", "error", "message", "Invalid username or password."));
         });
 
         get("/api/tables", (req, res) -> {

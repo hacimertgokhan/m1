@@ -13,7 +13,7 @@ public class M1Driver implements Driver {
         try {
             DriverManager.registerDriver(new M1Driver());
         } catch (SQLException e) {
-            throw new RuntimeException("M1Driver kaydedilemedi: " + e);
+            throw new RuntimeException("M1Driver cannot saved: " + e);
         }
     }
 
