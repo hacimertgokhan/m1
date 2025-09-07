@@ -20,18 +20,6 @@
 -   Java Development Kit (JDK) 8 or higher
 -   Apache Maven (to build the project)
 
-### Building the Project
-
-Clone the repository and build the project using Maven:
-
-```bash
-git clone https://github.com/hacimertgokhan/m1-database.git
-cd m1-database
-mvn clean package
-```
-
-This command will create a JAR file named `m1-jdbc-[version].jar` in the `target/` directory. This JAR file contains both the database engine and the JDBC driver.
-
 ### Running the Console
 
 You can start the interactive SQL console using the compiled JAR file:
@@ -39,43 +27,10 @@ You can start the interactive SQL console using the compiled JAR file:
 ```bash
 java -jar target/m1-jdbc-[version].jar
 ```
-
-When the console starts, you will be greeted with a screen like this:
-
-```
-Welcome to the M1 Database Console!
-...
-Connection successful. Type 'exit' to quit.
-m1-sql>
-```
-
-You can now start writing your SQL commands:
-
-```sql
-m1-sql> CREATE TABLE PLAYERS (UUID, NAME, LEVEL)
-Query OK. Rows affected: 0
-
-m1-sql> INSERT INTO PLAYERS VALUES ('abc-123', 'Notch', 99)
-Query OK. Rows affected: 1
-
-m1-sql> SELECT * FROM PLAYERS WHERE LEVEL = 99
-UUID    | NAME  | LEVEL
--------------------------
-abc-123 | Notch | 99
-
-(1 row found)
-
-m1-sql> exit
-```
-
-These commands will create `mydb.db` (the data file) and `mydb.db.wal` (the log file) in the directory where the program is run.
-
 ## ☕ Using in Java Projects (JDBC)
 
 Using the `m1` database in your own Java application (e.g., a Minecraft plugin or a web app) is straightforward.
-
 **1. Add the Dependency**
-
 If the project is published on Maven Central or another repository, add it to your `pom.xml`:
 
 ```xml
@@ -87,9 +42,7 @@ If the project is published on Maven Central or another repository, add it to yo
 ```
 
 Alternatively, manually add the compiled `m1-jdbc-[version].jar` to your project's build path.
-
 **2. Connect with JDBC**
-
 Follow the standard JDBC steps to connect to the database and execute your queries.
 
 ```java

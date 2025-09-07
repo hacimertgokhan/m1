@@ -5,6 +5,9 @@ import java.io.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.github.hacimertgokhan.m1.tools.M1Logger.error;
+import static io.github.hacimertgokhan.m1.tools.M1Logger.warning;
+
 public class StorageManager {
 
     private final File dbFile;
@@ -22,7 +25,7 @@ public class StorageManager {
     @SuppressWarnings("unchecked")
     public synchronized Map<String, Table> load() throws IOException, ClassNotFoundException {
         if (!dbFile.exists()) {
-            System.out.println("M1 database file cannot found, creating a new one: " + dbFile.getName());
+            warning("M1 database file cannot found, creating a new one: " + dbFile.getName());
             return new ConcurrentHashMap<>();
         }
 

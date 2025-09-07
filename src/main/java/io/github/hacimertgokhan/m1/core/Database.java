@@ -66,11 +66,11 @@ public class Database {
                 for (String sql : commandsToRecover) {
                     executeUpdateInternal(sql, false);
                 }
-                info("Kurtarma işlemi tamamlandı.");
+                info("Recovered.");
                 checkpoint();
             }
         } catch (IOException e) {
-            throw new SQLException("Log dosyasından kurtarma başarısız oldu.", e);
+            throw new SQLException("Cannot recovered.", e);
         }
     }
 
