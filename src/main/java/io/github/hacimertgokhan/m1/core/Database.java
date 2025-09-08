@@ -2,9 +2,11 @@ package io.github.hacimertgokhan.m1.core;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -87,24 +89,170 @@ public class Database {
     }
 
     public Table executeQuery(String sql) throws SQLException {
-        Matcher matcher = PATTERN_SELECT.matcher(sql.trim());
-        if (matcher.matches()) {
-            String columns = matcher.group(1);
-            String tableName = matcher.group(2).toUpperCase();
+        // Null ve boş string kontrolü
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new SQLException("SQL query cannot be null or empty");
+        }
+
+        String trimmedSql = sql.trim();
+        Matcher matcher = PATTERN_SELECT.matcher(trimmedSql);
+
+        if (!matcher.matches()) {
+            throw new SQLException("Unknown or unsupported select query: " + sql);
+        }
+
+        try {
+            String columns = matcher.group(1).trim();
+            String tableName = matcher.group(2).trim().toUpperCase();
             String whereClause = matcher.group(3);
+
+            // Tablo var mı kontrolü
             Table table = tables.get(tableName);
-            if (table == null) throw new SQLException("No table found with this argument: " + tableName);
-            if (!columns.trim().equals("*")) throw new SQLException("Şimdilik sadece 'SELECT *' desteklenmektedir.");
-            Table resultTable = new Table("RESULT");
-            table.getColumnNames().forEach(resultTable::addColumn);
-            for(List<Object> row : table.getRows()) {
-                if(whereClause == null || rowMatches(table, row, whereClause)){
-                    resultTable.addRow(row);
+            if (table == null) {
+                throw new SQLException("Table not found: " + tableName);
+            }
+
+            // Sonuç tablosu oluşturma
+            Table resultTable = createResultTable(table, columns);
+
+            // Satırları filtreleme ve ekleme
+            filterAndAddRows(table, resultTable, whereClause);
+
+            return resultTable;
+
+        } catch (IndexOutOfBoundsException e) {
+            throw new SQLException("Invalid SQL syntax: " + sql, e);
+        } catch (Exception e) {
+            throw new SQLException("Error executing query: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Sonuç tablosunu oluşturur ve sütunları belirler
+     */
+    private Table createResultTable(Table sourceTable, String columns) throws SQLException {
+        Table resultTable = new Table("RESULT");
+
+        if ("*".equals(columns)) {
+            // Tüm sütunları ekle
+            sourceTable.getColumnNames().forEach(resultTable::addColumn);
+        } else {
+            // Belirli sütunları ekle
+            String[] selectedColumns = columns.split("\\s*,\\s*");
+            List<String> availableColumns = sourceTable.getColumnNames();
+
+            for (String column : selectedColumns) {
+                String cleanColumn = column.trim();
+                if (availableColumns.contains(cleanColumn)) {
+                    resultTable.addColumn(cleanColumn);
+                } else {
+                    throw new SQLException("Column not found: " + cleanColumn);
                 }
             }
-            return resultTable;
         }
-        throw new SQLException("Unknow or unsupported select query: " + sql);
+
+        return resultTable;
+    }
+
+    /**
+     * Satırları filtreler ve sonuç tablosuna ekler
+     */
+    private void filterAndAddRows(Table sourceTable, Table resultTable, String whereClause) {
+        List<String> sourceColumns = sourceTable.getColumnNames();
+        List<String> resultColumns = resultTable.getColumnNames();
+
+        for (List<Object> row : sourceTable.getRows()) {
+            if (whereClause == null || rowMatches(sourceTable, row, whereClause)) {
+                List<Object> resultRow = new ArrayList<>();
+
+                // Sadece seçilen sütunların değerlerini al
+                for (String resultColumn : resultColumns) {
+                    int sourceIndex = sourceColumns.indexOf(resultColumn);
+                    if (sourceIndex >= 0 && sourceIndex < row.size()) {
+                        resultRow.add(row.get(sourceIndex));
+                    } else {
+                        resultRow.add(null); // Güvenlik için
+                    }
+                }
+
+                resultTable.addRow(resultRow);
+            }
+        }
+    }
+
+    /**
+     * Geliştirilmiş query executor
+     */
+    public CompletableFuture<Table> executeQueryAsync(String sql) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return executeQuery(sql);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /**
+     * Sayfalama desteği ile query çalıştırma
+     */
+    public Table executeQueryWithPagination(String sql, int offset, int limit) throws SQLException {
+        Table fullResult = executeQuery(sql);
+
+        if (offset < 0 || limit <= 0) {
+            throw new SQLException("Invalid pagination parameters");
+        }
+
+        Table paginatedResult = new Table("PAGINATED_RESULT");
+        fullResult.getColumnNames().forEach(paginatedResult::addColumn);
+
+        List<List<Object>> rows = fullResult.getRows();
+        int startIndex = Math.min(offset, rows.size());
+        int endIndex = Math.min(offset + limit, rows.size());
+
+        for (int i = startIndex; i < endIndex; i++) {
+            paginatedResult.addRow(rows.get(i));
+        }
+
+        return paginatedResult;
+    }
+
+    /**
+     * Query sonucunda kaç satır döneceğini hesaplar (COUNT işlevi)
+     */
+    public int countRows(String sql) throws SQLException {
+        Table result = executeQuery(sql);
+        return result.getRows().size();
+    }
+
+    /**
+     * Caching mekanizması ile query çalıştırma
+     */
+    private final Map<String, Table> queryCache = new ConcurrentHashMap<>();
+    private final long CACHE_EXPIRY_MS = 300000; // 5 dakika
+    private final Map<String, Long> cacheTimestamps = new ConcurrentHashMap<>();
+
+    public Table executeQueryWithCache(String sql) throws SQLException {
+        String normalizedSql = sql.trim().toLowerCase();
+
+        // Cache kontrolü
+        if (queryCache.containsKey(normalizedSql)) {
+            Long timestamp = cacheTimestamps.get(normalizedSql);
+            if (timestamp != null && System.currentTimeMillis() - timestamp < CACHE_EXPIRY_MS) {
+                return queryCache.get(normalizedSql);
+            } else {
+                // Cache süresi dolmuş, temizle
+                queryCache.remove(normalizedSql);
+                cacheTimestamps.remove(normalizedSql);
+            }
+        }
+
+        // Query'yi çalıştır ve cache'e ekle
+        Table result = executeQuery(sql);
+        queryCache.put(normalizedSql, result);
+        cacheTimestamps.put(normalizedSql, System.currentTimeMillis());
+
+        return result;
     }
 
     public int executeUpdate(String sql) throws SQLException {
